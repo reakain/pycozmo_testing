@@ -61,6 +61,12 @@ def main(command, option):
         pcli.load_anims()
         for name in sorted(pcli.get_anim_names()):
             print(name, flush=True)
+    elif command == "panimgroups":
+        pcli = pycozmo.Client()
+        pcli.load_anims()
+        groups = pcli.animation_groups
+        for group in groups:
+            print(group, flush=True)
     elif command == "expression" and option not in pycozmo.expressions.expressions.__all__:
         print("ERROR: " + option + " is not a valid expression.", flush=True)
     else:
@@ -85,6 +91,31 @@ def main(command, option):
                     time.sleep(3)
                 else:
                     print ("ERROR: " + option + " is not a valid animation.", flush=True)
+
+            elif command == "tanimgroup":
+                if option in cli.animation_groups:
+                    # Play animation group
+                    cli.play_anim_group(option)
+                    cli.wait_for(pycozmo.event.EvtAnimationCompleted)
+                    time.sleep(3)
+                else:
+                    print ("ERROR: " + option + " is not a valid animation group.", flush=True)
+
+            elif command =="tcompound":
+                time.sleep(2)
+                cli.drive_wheels(100, -100, lwheel_acc=999, rwheel_acc=999, duration = 0.3)
+                cli.drive_wheels(-100, 100, lwheel_acc=999, rwheel_acc=999, duration = 0.6)
+                cli.drive_wheels(100, -100, lwheel_acc=999, rwheel_acc=999, duration = 0.4)
+                cli.move_head(1)
+                time.sleep(1)
+                cli.drive_wheels(100, -100, lwheel_acc=999, rwheel_acc=999, duration = 0.3)
+                cli.drive_wheels(-100, 100, lwheel_acc=999, rwheel_acc=999, duration = 0.6)
+                cli.drive_wheels(100, -100, lwheel_acc=999, rwheel_acc=999, duration = 0.4)
+                time.sleep(1)
+                cli.play_anim_group("CodeLabChatty")
+                cli.play_anim_group("VC_Alrighty")
+                time.sleep(2)
+
 
             elif command == "expressions" or "expression":
                 cli.enable_procedural_face(False)
@@ -163,23 +194,24 @@ if __name__ == "__main__":
     import sys
 
     # Get what to test
-    if len(sys.argv) > 1:
+    if len(sys.argv) == 2:
         command = str(sys.argv[1])
-    else:
-        command = "-h"
-
-    if command == "tanim":
-        if(len(sys.argv) == 3):
+        if command =="expressions" or \
+            command == "panims" or \
+            command =="pexpressions" or \
+            command == "panimgroups" or \
+            command == "tcompound":
+            option = ""
+        else:
+            command = "-h"
+    elif len(sys.argv) == 3:
+        command = str(sys.argv[1])
+        if command == "tanim" or \
+            command =="expression" or\
+            command == "tanimgroup":
             option = str(sys.argv[2])
         else:
             command = "-h"
-    elif command == "expression":
-        if(len(sys.argv) == 3):
-            option = str(sys.argv[2])
-        else:
-            command = "-h"
-    elif command == "expressions" or command == "panims" or command =="pexpressions":
-        option = ""
     else:
         command = "-h"
 
@@ -189,7 +221,10 @@ if __name__ == "__main__":
         print("expressions --------------- See all possible expressions and their names")
         print("expression <option> ------- Run expression with specific name")
         print("panims -------------------- Print all animation names")
-        print("tanim <option> ------------ Run animation with specific name", flush=True)
+        print("tanim <option> ------------ Run animation with specific name")
+        print("panimgroups --------------- Print all animation group names")
+        print("tanimgroup <option> ------- Run animation group with specific name")
+        print("tcompound ----------------- Test a compound animation", flush=True)
     else:
         #Run as main program
         main(command, option)

@@ -27,6 +27,8 @@ expressions --------------- See all possible expressions and their names
 expression <option> ------- Run expression with specific name
 panims -------------------- Print all animation names
 tanim <option> ------------ Run animation with specific name
+panimgroups --------------- Print all animation group names
+tanimgroup <option> ------- Run animation group with specific name
 ```
 
 ## Capabilities
@@ -37,7 +39,10 @@ tanim <option> ------------ Run animation with specific name
 
 ### Animations
 - Base animations from flat stack. Looks like there are complete animations, and then components of those complete animations.
-- The names don't seem to line up with the names from the cozmo SDK. So answer hazy which animations are which
+- ~~The names don't seem to line up with the names from the cozmo SDK. So answer hazy which animations are which~~
+- The named animations from the sdk are the animation groups, and are themselves compound animations
+- Can make compount animations with functions and animation groups, mostly same commands
+- Could likely make interruptable routines of python commands for interruptable compound action sets
 
 ### Event Handling
 Currently get handling for:
@@ -50,9 +55,8 @@ Currently get handling for:
 - Get robot state data packet -> currently only reading the battery level out of it
 
 ### Need to test
-- ability to interrupt animations
+- ~~ability to interrupt animations~~ -> not tested, but seems feasible
 - Event handling of animation events
-- ability to make compound animations
 
 ## References
 1. [PyCozmo](https://github.com/zayfod/pycozmo)
