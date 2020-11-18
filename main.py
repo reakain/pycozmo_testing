@@ -52,102 +52,144 @@ def on_animation_complete(cli, state:bool):
         print("still going")
 
 
-def main():
-    with pycozmo.connect() as cli:
+def main(command, option):
+    if command == "pexpressions":
+        for expression in pycozmo.expressions.expressions.__all__:
+            print(expression, flush=True)
+    elif command == "panims":
+        pcli = pycozmo.Client()
+        pcli.load_anims()
+        for name in sorted(pcli.get_anim_names()):
+            print(name, flush=True)
+    elif command == "expression" and option not in pycozmo.expressions.expressions.__all__:
+        print("ERROR: " + option + " is not a valid expression.", flush=True)
+    else:
+        with pycozmo.connect() as cli:
 
-        cli.add_handler(pycozmo.event.EvtRobotPickedUpChange, on_robot_picked_up)
-        cli.add_handler(pycozmo.protocol_encoder.RobotState, on_robot_state, one_shot=True)
-        cli.add_handler(pycozmo.event.EvtRobotOrientationChange, on_robot_orientation_change)
-        cli.add_handler(pycozmo.protocol_encoder.RobotPoked, on_robot_poked)
-        cli.add_handler(pycozmo.event.EvtCliffDetectedChange, on_cliff_detected)
-        cli.add_handler(pycozmo.event.EvtRobotChargingChange, on_robot_charging)
-        #cli.add_handler(pycozmo.event.EvtAnimationCompleted, on_animation_complete)
+            cli.add_handler(pycozmo.event.EvtRobotPickedUpChange, on_robot_picked_up)
+            cli.add_handler(pycozmo.protocol_encoder.RobotState, on_robot_state, one_shot=True)
+            cli.add_handler(pycozmo.event.EvtRobotOrientationChange, on_robot_orientation_change)
+            cli.add_handler(pycozmo.protocol_encoder.RobotPoked, on_robot_poked)
+            cli.add_handler(pycozmo.event.EvtCliffDetectedChange, on_cliff_detected)
+            cli.add_handler(pycozmo.event.EvtRobotChargingChange, on_robot_charging)
+            #cli.add_handler(pycozmo.event.EvtAnimationCompleted, on_animation_complete)
 
-        # Load animations - one time.
-        cli.load_anims()
+            # Load animations - one time.
+            cli.load_anims()
 
-        # Print the names of all available animations.
-        #names = cli.get_anim_names()
-        #for name in sorted(names):
-        #    print(name)
+            if command == "tanim":
+                if option in cli.get_anim_names():
+                    # Play an animation.
+                    cli.play_anim(option)
+                    cli.wait_for(pycozmo.event.EvtAnimationCompleted)
+                    time.sleep(3)
+                else:
+                    print ("ERROR: " + option + " is not a valid animation.", flush=True)
 
-        while True:
-            #cli.enable_procedural_face=False
+            elif command == "expressions" or "expression":
+                cli.enable_procedural_face(False)
+                # Raise head.
+                angle = (pycozmo.robot.MAX_HEAD_ANGLE.radians - pycozmo.robot.MIN_HEAD_ANGLE.radians) / 2.0
+                cli.set_head_angle(angle)
+                time.sleep(1)
 
-            # Play an animation.
-            cli.play_anim("anim_bored_01")
-            cli.wait_for(pycozmo.event.EvtAnimationCompleted)
-            #cli.enable_procedural_face = True
-            time.sleep(3)
+                # List of face expressions.
+                expressions = [
+                    pycozmo.expressions.Anger(),
+                    pycozmo.expressions.Sadness(),
+                    pycozmo.expressions.Happiness(),
+                    pycozmo.expressions.Surprise(),
+                    pycozmo.expressions.Disgust(),
+                    pycozmo.expressions.Fear(),
+                    pycozmo.expressions.Pleading(),
+                    pycozmo.expressions.Vulnerability(),
+                    pycozmo.expressions.Despair(),
+                    pycozmo.expressions.Guilt(),
+                    pycozmo.expressions.Disappointment(),
+                    pycozmo.expressions.Embarrassment(),
+                    pycozmo.expressions.Horror(),
+                    pycozmo.expressions.Skepticism(),
+                    pycozmo.expressions.Annoyance(),
+                    pycozmo.expressions.Fury(),
+                    pycozmo.expressions.Suspicion(),
+                    pycozmo.expressions.Rejection(),
+                    pycozmo.expressions.Boredom(),
+                    pycozmo.expressions.Tiredness(),
+                    pycozmo.expressions.Asleep(),
+                    pycozmo.expressions.Confusion(),
+                    pycozmo.expressions.Amazement(),
+                    pycozmo.expressions.Excitement(),
+                ]
 
-            # # Raise head.
-            # angle = (pycozmo.robot.MAX_HEAD_ANGLE.radians - pycozmo.robot.MIN_HEAD_ANGLE.radians) / 2.0
-            # cli.set_head_angle(angle)
-            # time.sleep(1)
+                # Base face expression.
+                base_face = pycozmo.expressions.Neutral()
 
-            # # List of face expressions.
-            # expressions = [
-            #     pycozmo.expressions.Anger(),
-            #     pycozmo.expressions.Sadness(),
-            #     pycozmo.expressions.Happiness(),
-            #     pycozmo.expressions.Surprise(),
-            #     pycozmo.expressions.Disgust(),
-            #     pycozmo.expressions.Fear(),
-            #     pycozmo.expressions.Pleading(),
-            #     pycozmo.expressions.Vulnerability(),
-            #     pycozmo.expressions.Despair(),
-            #     pycozmo.expressions.Guilt(),
-            #     pycozmo.expressions.Disappointment(),
-            #     pycozmo.expressions.Embarrassment(),
-            #     pycozmo.expressions.Horror(),
-            #     pycozmo.expressions.Skepticism(),
-            #     pycozmo.expressions.Annoyance(),
-            #     pycozmo.expressions.Fury(),
-            #     pycozmo.expressions.Suspicion(),
-            #     pycozmo.expressions.Rejection(),
-            #     pycozmo.expressions.Boredom(),
-            #     pycozmo.expressions.Tiredness(),
-            #     pycozmo.expressions.Asleep(),
-            #     pycozmo.expressions.Confusion(),
-            #     pycozmo.expressions.Amazement(),
-            #     pycozmo.expressions.Excitement(),
-            # ]
+                rate = pycozmo.robot.FRAME_RATE
+                timer = pycozmo.util.FPSTimer(rate)
+                for expression in expressions:
+                    if command == "expressions" or expression.__class__.__name__ == option:
+                        # Transition from base face to expression and back.
+                        for from_face, to_face in ((base_face, expression), (expression, base_face)):
 
-            # # Base face expression.
-            # base_face = pycozmo.expressions.Neutral()
+                            if to_face != base_face:
+                                print(to_face.__class__.__name__, flush=True)
 
-            # rate = pycozmo.robot.FRAME_RATE
-            # timer = pycozmo.util.FPSTimer(rate)
-            # for expression in expressions:
+                            # Generate transition frames.
+                            face_generator = pycozmo.procedural_face.interpolate(from_face, to_face, rate // 3)
+                            for face in face_generator:
 
-            #     # Transition from base face to expression and back.
-            #     for from_face, to_face in ((base_face, expression), (expression, base_face)):
+                                # Render face image.
+                                im = face.render()
 
-            #         if to_face != base_face:
-            #             print(to_face.__class__.__name__)
+                                # The Cozmo protocol expects a 128x32 image, so take only the even lines.
+                                np_im = np.array(im)
+                                np_im2 = np_im[::2]
+                                im2 = Image.fromarray(np_im2)
 
-            #         # Generate transition frames.
-            #         face_generator = pycozmo.procedural_face.interpolate(from_face, to_face, rate // 3)
-            #         for face in face_generator:
+                                # Display face image.
+                                cli.display_image(im2)
 
-            #             # Render face image.
-            #             im = face.render()
+                                # Maintain frame rate.
+                                timer.sleep()
 
-            #             # The Cozmo protocol expects a 128x32 image, so take only the even lines.
-            #             np_im = np.array(im)
-            #             np_im2 = np_im[::2]
-            #             im2 = Image.fromarray(np_im2)
+                            # Pause for 1s.
+                            for i in range(rate):
+                                timer.sleep()
+                    
 
-            #             # Display face image.
-            #             cli.display_image(im2)
-
-            #             # Maintain frame rate.
-            #             timer.sleep()
-
-            #         # Pause for 1s.
-            #         for i in range(rate):
-            #             timer.sleep()
+            
 
 if __name__ == "__main__":
-  #Run as main program
-  main()
+    import sys
+
+    # Get what to test
+    if len(sys.argv) > 1:
+        command = str(sys.argv[1])
+    else:
+        command = "-h"
+
+    if command == "tanim":
+        if(len(sys.argv) == 3):
+            option = str(sys.argv[2])
+        else:
+            command = "-h"
+    elif command == "expression":
+        if(len(sys.argv) == 3):
+            option = str(sys.argv[2])
+        else:
+            command = "-h"
+    elif command == "expressions" or command == "panims" or command =="pexpressions":
+        option = ""
+    else:
+        command = "-h"
+
+    if command == "-h":
+        print("Possible function tests are called with:")
+        print("pexressions --------------- Print all expression names")
+        print("expressions --------------- See all possible expressions and their names")
+        print("expression <option> ------- Run expression with specific name")
+        print("panims -------------------- Print all animation names")
+        print("tanim <option> ------------ Run animation with specific name", flush=True)
+    else:
+        #Run as main program
+        main(command, option)

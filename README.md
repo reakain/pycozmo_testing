@@ -2,19 +2,6 @@
 
 This serves as a quick test of the PyCozmo expression and animation capabilities.
 
-### Faces
-- Requires disabling standard procedural faces
-- Full list just pulled form pycozmo examples
-
-### Animations
-- Base animations from flat stack. Looks like there are complete animations, and then components of those complete animations.
-- The names don't seem to line up with the names from the cozmo SDK. So answer hazy which animations are which
-
-### Need to test
-- ability to interrupt animations
-- Event handling of animation events
-- ability to make compound animations
-
 ## Environment Setup
 This application uses python 3, and these instructions assume python3 is set as your default python command. You can check your version with ```python --version```
 
@@ -26,6 +13,46 @@ This application uses python 3, and these instructions assume python3 is set as 
 3. Install the requirements once activated with ```pip install -r requirements.txt```
 4. If you install any additional libraries, update the requirements with ```pip freeze > requirements.txt```
 5. Exit the virtual environment with ```deactivate```
+
+## Usage
+List all functions:
+
+``` python main.py -h```
+
+Results in:
+```
+Possible function tests are called with:
+pexressions --------------- Print all expression names
+expressions --------------- See all possible expressions and their names
+expression <option> ------- Run expression with specific name
+panims -------------------- Print all animation names
+tanim <option> ------------ Run animation with specific name
+```
+
+## Capabilities
+
+### Faces
+- Requires disabling standard procedural faces
+- Full list just pulled form pycozmo examples
+
+### Animations
+- Base animations from flat stack. Looks like there are complete animations, and then components of those complete animations.
+- The names don't seem to line up with the names from the cozmo SDK. So answer hazy which animations are which
+
+### Event Handling
+Currently get handling for:
+
+- On Robot Picked Up
+- On Robot Orientation Change (is it put on its back or side or anything)
+- On Cliff Detected
+- On Charging State Change
+- On robot poked???? -> Is this petting cozmo or something?
+- Get robot state data packet -> currently only reading the battery level out of it
+
+### Need to test
+- ability to interrupt animations
+- Event handling of animation events
+- ability to make compound animations
 
 ## References
 1. [PyCozmo](https://github.com/zayfod/pycozmo)
