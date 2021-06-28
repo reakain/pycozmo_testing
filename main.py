@@ -92,6 +92,54 @@ def main(command, option):
                 else:
                     print ("ERROR: " + option + " is not a valid animation.", flush=True)
 
+            elif command == "tanimface":
+                if option in cli.get_anim_names():
+                    # Play the faces only for an animation group
+                    cli._load_clips(cli._clip_metadata[option].fspec)
+                    clip = cli._clips[option]
+                    tests = clip.keyframes
+                    test = clip.to_dict()
+                    testing = test["keyframes"]["ProceduralFaceKeyFrame"]
+                    keyface = []
+                    names = ['faceCenterX', 'faceCenterY', 'faceScaleX', 'faceScaleY', 'faceAngle', 'leftEye', 'rightEye']
+                    
+                    for keyframe in testing:
+                        param = []    
+                        for i in names:
+                            if type(keyframe[i]) == list:
+                                for j in keyframe[i]:
+                                    param.append(j)
+                            else:
+                                param.append(keyframe[i])
+                        
+                        keyface.append(pycozmo.procedural_face.ProceduralFace(params=param))
+                        
+
+                    keyface.append(pycozmo.expressions.Neutral())
+                    rate = pycozmo.robot.FRAME_RATE
+                    timer = pycozmo.util.FPSTimer(rate)
+                    for i, face in enumerate(keyface[1:]):
+
+                        from_face = keyface[i]
+                        to_face = face
+                        
+                        face_generator = pycozmo.procedural_face.interpolate(from_face,to_face, int(rate/5))
+
+                        for faces in face_generator:
+                            im = faces.render()
+
+                            np_im = np.array(im)
+                            np_im2 = np_im[::2]
+                            im2 = Image.fromarray(np_im2)
+                            
+                            cli.display_image(im2)
+                            
+                            timer.sleep()
+                    for i in range(rate):
+                        timer.sleep()
+                else:
+                    print ("ERROR: " + option + " is not a valid animation.", flush=True)
+
             elif command == "tanimgroup":
                 if option in cli.animation_groups:
                     # Play animation group
@@ -99,7 +147,7 @@ def main(command, option):
                     cli.wait_for(pycozmo.event.EvtAnimationCompleted)
                     time.sleep(3)
                 else:
-                    print ("ERROR: " + option + " is not a valid animation group.", flush=True)
+                    print ("ERROR: " + option + " is not a valid animation group.", flush=True)    
 
             elif command =="tcompound":
                 time.sleep(2)
@@ -208,7 +256,8 @@ if __name__ == "__main__":
         command = str(sys.argv[1])
         if command == "tanim" or \
             command =="expression" or\
-            command == "tanimgroup":
+            command == "tanimgroup" or \
+            command == "tanimface":
             option = str(sys.argv[2])
         else:
             command = "-h"
@@ -222,6 +271,7 @@ if __name__ == "__main__":
         print("expression <option> ------- Run expression with specific name")
         print("panims -------------------- Print all animation names")
         print("tanim <option> ------------ Run animation with specific name")
+        print("tanimface <option> -------- Run just the faces from an animation")
         print("panimgroups --------------- Print all animation group names")
         print("tanimgroup <option> ------- Run animation group with specific name")
         print("tcompound ----------------- Test a compound animation", flush=True)
