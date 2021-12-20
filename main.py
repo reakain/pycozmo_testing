@@ -86,7 +86,7 @@ def main(command, option, filename):
 
             if command == "agjson":
                 if option in cli.animation_groups:
-                    animation_group = cli.animation_groups.get(anim_group_name)
+                    animation_group = cli.animation_groups.get(option)
                     member = animation_group.choose_member()
                     option = member.name
                     command = "animjson"
@@ -264,7 +264,7 @@ if __name__ == "__main__":
     else:
         command = str(sys.argv[1])
 
-    if len(sys.arg) >= 3:
+    if len(sys.argv) >= 3:
         option = str(sys.argv[2])
     if len(sys.argv) >= 4:
         filename = str(sys.argv[3])
