@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import time
 
 from PIL import Image
 import numpy as np
+import json
 import pycozmo
 
 def on_robot_state(cli, pkt: pycozmo.protocol_encoder.RobotState):
@@ -52,7 +53,7 @@ def on_animation_complete(cli, state:bool):
         print("still going")
 
 
-def main(command, option):
+def main(command, option, filename):
     if command == "pexpressions":
         for expression in pycozmo.expressions.expressions.__all__:
             print(expression, flush=True)
@@ -83,7 +84,21 @@ def main(command, option):
             # Load animations - one time.
             cli.load_anims()
 
-            if command == "tanim":
+            if command == "agjson":
+                if option in cli.animation_groups:
+                    animation_group = cli.animation_groups.get(anim_group_name)
+                    member = animation_group.choose_member()
+                    option = member.name
+                    command = "animjson"
+            
+            if command == "animjson":
+                cli._load_clips(cli._clip_metadata[option].fspec)
+                clip = cli._clips[option]
+                clip_dict = clip.to_dict()
+                with open(filename, "w") as outfile:
+                    json.dump(clip_dict, outfile)
+
+            elif command == "tanim":
                 if option in cli.get_anim_names():
                     # Play an animation.
                     cli.play_anim(option)
@@ -241,28 +256,41 @@ def main(command, option):
 if __name__ == "__main__":
     import sys
 
+    option = ""
+    filename = ""
     # Get what to test
-    if len(sys.argv) == 2:
-        command = str(sys.argv[1])
-        if command =="expressions" or \
-            command == "panims" or \
-            command =="pexpressions" or \
-            command == "panimgroups" or \
-            command == "tcompound":
-            option = ""
-        else:
-            command = "-h"
-    elif len(sys.argv) == 3:
-        command = str(sys.argv[1])
-        if command == "tanim" or \
-            command =="expression" or\
-            command == "tanimgroup" or \
-            command == "tanimface":
-            option = str(sys.argv[2])
-        else:
-            command = "-h"
-    else:
+    if len(sys.argv) < 2:
         command = "-h"
+    else:
+        command = str(sys.argv[1])
+
+    if len(sys.arg) >= 3:
+        option = str(sys.argv[2])
+    if len(sys.argv) >= 4:
+        filename = str(sys.argv[3])
+
+    if command != "expressions" and\
+       command != "panims" and\
+       command !="pexpressions" and \
+       command != "panimgroups" and \
+       command != "tcompound" and\
+       command != "tanim" and \
+       command !="expression" and\
+       command != "tanimgroup" and \
+       command != "tanimface" and\
+       command != "animjson" and\
+       command != "agjson":
+       command = "-h"
+    elif len(sys.argv) < 4 and\
+       (command == "animjson" or\
+       command == "agjson"):
+       command = "-h"
+    elif len(sys.argv) < 3 and\
+       (command == "tanim" or\
+       command == "expression" or\
+       command == "tanimgroup" or\
+       command == "tanimface"):
+       command = "-h"
 
     if command == "-h":
         print("Possible function tests are called with:")
@@ -274,7 +302,11 @@ if __name__ == "__main__":
         print("tanimface <option> -------- Run just the faces from an animation")
         print("panimgroups --------------- Print all animation group names")
         print("tanimgroup <option> ------- Run animation group with specific name")
+        print("animjson <option> <file> -- Print the animation keyframes from animation")
+        print("                            named <option> to json file with name <json>")
+        print("agjson <option> <file> ---- Print the animation keyframes from animation group")
+        print("                            named <option> to json file with name <json>")
         print("tcompound ----------------- Test a compound animation", flush=True)
     else:
         #Run as main program
-        main(command, option)
+        main(command, option, filename)
